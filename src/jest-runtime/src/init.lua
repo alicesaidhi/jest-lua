@@ -2000,7 +2000,23 @@ function Runtime_private:_execModule(
 				if typeof(scriptInstance) == "string" then
 					-- Disabling this at the surface level of the API until we have
 					-- deeper support in Jest.
-					error("Require-by-string is not enabled for use inside Jest at this time.")
+					local current = if loadModuleEnabled then defaultEnvironment.script.Parent else modulePath.Parent
+					local parts = string.split(scriptInstance, "/")
+
+					for _, part in parts do
+						if part == ".." then
+							if not current.Parent then error(`Unknown script {part} in {current}`) end
+							current = current.Parent
+						elseif part == "." then
+							-- nothing
+						else
+							local child = current:FindFirstChild(part)
+							if not child then error(`Unknown script {part} in {current}`) end
+							current = child
+						end
+					end
+
+					scriptInstance = current
 				end
 				return self:requireInternalModule(scriptInstance)
 			end
@@ -2008,7 +2024,24 @@ function Runtime_private:_execModule(
 				if typeof(scriptInstance) == "string" then
 					-- Disabling this at the surface level of the API until we have
 					-- deeper support in Jest.
-					error("Require-by-string is not enabled for use inside Jest at this time.")
+					local current = if loadModuleEnabled then defaultEnvironment.script.Parent else modulePath.Parent
+					local parts = string.split(scriptInstance, "/")
+
+					for _, part in parts do
+						if part == ".." then
+							if not current.Parent then error(`Unknown script {part} in {current}`) end
+							current = current.Parent
+						elseif part == "." then
+							-- nothing
+						else
+							local child = current:FindFirstChild(part)
+							if not child then error(`Unknown script {part} in {current}`) end
+							current = child
+						end
+					end
+
+					scriptInstance = current
+					-- error("Require-by-string is not enabled for use inside Jest at this time.")
 				end
 				return self:requireModuleOrMock(scriptInstance)
 			end,
